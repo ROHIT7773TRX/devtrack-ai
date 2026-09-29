@@ -375,8 +375,85 @@ A: `terraform.tfstate` maps declarative code to real deployed cloud resource IDs
 ---
 
 # ═══════════════════════════════════════════════
-# [FUTURE PHASES WILL BE ADDED HERE]
+# PHASE 7 & 8 — KUBERNETES ORCHESTRATION (K3s)
+# Date: 2026-09-29
 # ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Created Kubernetes manifests inside `kubernetes/`:
+   - `00-namespace.yaml`: Isolated namespace `devtrack`
+   - `01-configmap.yaml`: Non-sensitive configuration data
+   - `02-secret.yaml`: Base64 encoded database credentials & URLs
+   - `03-postgres.yaml`: `PersistentVolumeClaim` (2GB), 1-replica `Deployment`, `ClusterIP` Service (port 5432)
+   - `04-backend.yaml`: 2-replica FastAPI `Deployment` with CPU/Memory limits, `livenessProbe` (`/health`), `readinessProbe` (`/health`), and `NodePort` Service (30800)
+   - `05-frontend.yaml`: 2-replica React/Nginx `Deployment` with CPU/Memory limits and `NodePort` Service (30080)
+   - `06-hpa.yaml`: `HorizontalPodAutoscaler` dynamically scaling backend pods from 2 to 5 when CPU utilization exceeds 70%
+
+## Why Kubernetes (K3s)?
+
+- **Self-Healing:** If a pod crashes or fails health checks (`livenessProbe`), Kubernetes automatically kills and restarts it.
+- **Load Balancing:** Kubernetes `Service` acts as an internal load balancer distributing traffic evenly across all healthy pod replicas.
+- **Auto-Scaling:** Horizontal Pod Autoscaler dynamically adds or removes pod replicas depending on real-time CPU/memory load.
+- **Rolling Updates:** Zero-downtime deployments by replacing old pod replicas one by one with new container versions.
+
+---
+
+# ═══════════════════════════════════════════════
+# PHASE 9 — AUTOMATED CI/CD PIPELINE (GITHUB ACTIONS)
+# Date: 2026-09-29
+# ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Configured GitHub Actions workflow (`.github/workflows/ci-cd.yml`) with 3 sequential jobs:
+   - **Job 1 (`test`):** Installs Python 3.11, runs `pytest tests/ -v`. **Pipeline aborts if any test fails.**
+   - **Job 2 (`build-and-push`):** Logs into Docker Hub using encrypted secrets (`DOCKER_USERNAME`, `DOCKER_PASSWORD`), builds backend & frontend Docker images, tags them with commit SHA and `latest`, and pushes to registry.
+   - **Job 3 (`deploy`):** Connects to AWS EC2 via SSH (`appleboy/ssh-action`), applies Kubernetes manifests (`kubectl apply -f kubernetes/`), triggers rolling restart, and verifies rollout status.
+
+---
+
+# ═══════════════════════════════════════════════
+# PHASE 10 — MONITORING & OBSERVABILITY (PROMETHEUS & GRAFANA)
+# Date: 2026-09-29
+# ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Instrumented FastAPI backend with `prometheus-fastapi-instrumentator` exposing metrics at `/metrics`.
+2. Created Prometheus deployment & NodePort Service (`kubernetes/monitoring/prometheus-deployment.yaml`) on NodePort 30090.
+3. Created Grafana deployment & NodePort Service (`kubernetes/monitoring/grafana-deployment.yaml`) on NodePort 30030.
+
+---
+
+# ═══════════════════════════════════════════════
+# FINAL COMPREHENSIVE VIVA PREPARATION HANDBOOK
+# ═══════════════════════════════════════════════
+
+### 1. Application & Core Concepts
+- **Q: What problem does DevTrack AI solve?**
+  - **A:** It provides a centralized cloud platform for tracking job applications across stages (Applied, Screening, Interview, Offer, Rejected), storing interview notes, and visualizing progress metrics.
+- **Q: Why FastAPI for backend and React for frontend?**
+  - **A:** FastAPI is high-performance, async-native, auto-generates OpenAPI docs at `/docs`, and integrates seamlessly with Pydantic and SQLAlchemy. React provides a responsive, state-driven UI for dashboard analytics.
+
+### 2. Docker & Containerization
+- **Q: Why containerize applications?**
+  - **A:** Containers encapsulate application code, runtimes, system tools, and dependencies into lightweight images, ensuring 100% environment parity between local dev, CI/CD runners, and cloud Kubernetes nodes.
+- **Q: Docker vs Kubernetes?**
+  - **A:** Docker packages and runs single containers on a single host. Kubernetes orchestrates multi-container applications across cluster nodes, providing load balancing, auto-scaling, self-healing, and rolling updates.
+
+### 3. Infrastructure as Code (Terraform)
+- **Q: Why Terraform instead of manual AWS Console creation?**
+  - **A:** Terraform provides version-controlled, reproducible cloud provisioning. Running `terraform destroy` ensures all cloud resources are cleaned up immediately, keeping AWS costs close to \$0.
+
+### 4. Kubernetes Orchestration
+- **Q: What is the purpose of Kubernetes Liveness and Readiness Probes?**
+  - **A:** `livenessProbe` checks if a container is alive (restarting it if it fails/deadlocks). `readinessProbe` checks if a container is ready to accept incoming traffic (removing it from service load balancers until healthy).
+
+### 5. CI/CD Pipeline
+- **Q: How does automated testing protect production?**
+  - **A:** In our GitHub Actions pipeline, Job 1 runs `pytest`. If any unit or integration test fails, the workflow immediately exits with code 1, preventing defective code from ever being built or deployed to Kubernetes.
+
 
 ## Phases Yet to Come
 

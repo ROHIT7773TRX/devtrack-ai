@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devtrack
+  labels:
+    name: devtrack
+    app: devtrack-ai
