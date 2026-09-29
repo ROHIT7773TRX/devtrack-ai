@@ -75,6 +75,13 @@ id_rsa.pub
 .dockerignore
 
 # ──────────────────────────────────────────────
+# SQLITE TEST DATABASES (generated during pytest runs)
+# ──────────────────────────────────────────────
+*.db
+test.db
+test_devtrack.db
+
+# ──────────────────────────────────────────────
 # EDITORS / IDE
 # ──────────────────────────────────────────────
 .vscode/

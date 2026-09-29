@@ -67,7 +67,92 @@ Viva Answer:
 
 ## ERRORS RECORDED SO FAR
 
-*No errors recorded yet. This document will grow as we encounter and solve issues during development.*
+---
+
+```
+─────────────────────────────────────────────────────
+ERROR #01
+
+Phase:         Phase 2 — FastAPI Backend Setup
+Date:          2026-09-29
+Category:      Python / Package Installation
+
+Problem:
+Installing backend dependencies on Windows using:
+  pip install -r requirements.txt
+The package 'psycopg2-binary==2.9.9' failed to install.
+
+Actual Error Message:
+  Error: pg_config executable not found.
+  pg_config is required to build psycopg2 from source.
+  Getting requirements to build wheel did not run successfully.
+  exit code: 1
+
+Where It Happened:
+  Windows PowerShell terminal, inside the Python virtual environment (.venv)
+  Running: .venv\Scripts\pip install -r requirements.txt
+
+Root Cause:
+  psycopg2-binary on PyPI provides pre-compiled wheels for Linux and macOS,
+  but on Windows it sometimes falls back to building from source.
+  Building from source requires PostgreSQL development headers (pg_config),
+  which are part of a full PostgreSQL installation.
+  Since we only have Docker Desktop on this machine (not a local PostgreSQL
+  installation), pg_config is not in the PATH.
+
+How We Diagnosed It:
+  1. Read the error: "pg_config executable not found"
+  2. Understood that pg_config is part of PostgreSQL's dev tools
+  3. Realized our machine has no local PostgreSQL installed (we use Docker for that)
+  4. Searched pip for Windows-compatible PostgreSQL drivers
+
+Solution:
+  For local development and testing, we don't actually need psycopg2 at all.
+  Our pytest tests use SQLite (in-memory database), which doesn't need psycopg2.
+  psycopg2 is only needed when the app connects to a real PostgreSQL server
+  (Docker container or AWS RDS).
+
+  Fix 1 - For local testing: Install all other packages; add aiosqlite for SQLite
+  Fix 2 - For Docker: psycopg2-binary installs fine inside a Linux Docker image
+  Fix 3 - Updated requirements.txt with platform-conditional install
+
+Commands/Changes:
+  # Install everything except psycopg2 for local dev
+  .venv\Scripts\pip install fastapi uvicorn[standard] sqlalchemy alembic \
+    pydantic pydantic-settings python-dotenv httpx pytest pytest-cov \
+    prometheus-fastapi-instrumentator
+
+  # When running in Docker (Linux), psycopg2-binary works perfectly:
+  # psycopg2-binary==2.9.9  (in requirements.txt, installed in Dockerfile)
+
+  # For tests: SQLite needs no driver — it's built into Python
+
+Verification:
+  pytest tests/unit/ -v   → All tests pass using SQLite
+  Docker build → psycopg2-binary installs correctly in Linux container
+
+Lesson Learned:
+  psycopg2 on Windows requires either:
+  1. A full PostgreSQL installation on the machine
+  2. Skipping local install and relying on Docker/Linux for psycopg2
+  The best practice for local development is to use SQLite for unit tests
+  and Docker Compose for integration tests against real PostgreSQL.
+  This is a common real-world pattern: "test with SQLite locally,
+  run with PostgreSQL in production."
+
+Viva Question:
+  Why did your tests use SQLite instead of PostgreSQL?
+
+Viva Answer:
+  Our unit tests use SQLite (in-memory) instead of PostgreSQL for three reasons:
+  1. Speed: SQLite runs in memory with no server — tests start instantly
+  2. Isolation: each test gets a fresh empty database — no test pollution
+  3. Portability: SQLite is built into Python — no installation required anywhere
+  SQLAlchemy abstracts the database, so our models and queries work
+  identically with both SQLite and PostgreSQL. In Docker and production,
+  we always use real PostgreSQL.
+─────────────────────────────────────────────────────
+```
 
 ---
 
