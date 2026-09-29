@@ -1,0 +1,88 @@
+# ============================================================
+# docker/docker-compose.yml
+# Multi-container orchestration for DevTrack AI local stack
+#
+# SERVICES:
+# 1. postgres: Relational Database
+# 2. backend: FastAPI REST API
+# 3. frontend: React UI served via Nginx
+# ============================================================
+
+version: '3.8'
+
+services:
+  # ──────────────────────────────────────────────
+  # 1. PostgreSQL Database Service
+  # ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: devtrack-db
+    restart: always
+    environment:
+      POSTGRES_DB: devtrack
+      POSTGRES_USER: devtrack_user
+      POSTGRES_PASSWORD: devtrack_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devtrack_user -d devtrack"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devtrack-network
+
+  # ──────────────────────────────────────────────
+  # 2. FastAPI Backend Service
+  # ──────────────────────────────────────────────
+  backend:
+    build:
+      context: ../app/backend
+      dockerfile: Dockerfile
+    container_name: devtrack-backend
+    restart: always
+    environment:
+      DATABASE_URL: postgresql://devtrack_user:devtrack_pass@postgres:5432/devtrack
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: devtrack
+      POSTGRES_USER: devtrack_user
+      POSTGRES_PASSWORD: devtrack_pass
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - devtrack-network
+
+  # ──────────────────────────────────────────────
+  # 3. React Frontend Service
+  # ──────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../app/frontend
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: http://localhost:8000
+    container_name: devtrack-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - devtrack-network
+
+# ──────────────────────────────────────────────
+# Networks & Volumes
+# ──────────────────────────────────────────────
+networks:
+  devtrack-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

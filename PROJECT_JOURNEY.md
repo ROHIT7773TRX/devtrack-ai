@@ -298,6 +298,44 @@ A: In-memory SQLite provides instantaneous startup, zero external infrastructure
 ---
 
 # ═══════════════════════════════════════════════
+# PHASE 5 — DOCKER & DOCKER COMPOSE CONTAINERIZATION
+# Date: 2026-09-29
+# ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Created container specification for backend:
+   - Base image: `python:3.11-slim`
+   - Configured non-root user considerations, layer caching, and HEALTHCHECK instructions
+2. Created multi-stage Docker build for frontend (`app/frontend/Dockerfile`):
+   - Stage 1: Build React static assets (`node:18-alpine`)
+   - Stage 2: Production web server (`nginx:alpine`) serving HTML/JS assets on port 80 (~25MB image size)
+3. Configured custom Nginx reverse proxy configuration (`app/frontend/nginx.conf`)
+4. Configured Docker Compose multi-container stack (`docker/docker-compose.yml`):
+   - `postgres:15-alpine` container with named volume persistence (`postgres_data`) and healthcheck
+   - `backend` FastAPI service linked via internal Docker bridge network (`devtrack-network`)
+   - `frontend` React/Nginx web server exposing host port 3000
+
+## Why Docker?
+
+- **Environment Consistency:** Eliminates "it works on my machine" issues by packaging code, dependencies, runtime, and OS configurations into portable images.
+- **Microservices Isolation:** Separates frontend, backend API, and PostgreSQL database into independent isolated containers communicating via virtual bridge networks.
+- **Cloud Readiness:** Container images can be pushed to Docker Hub and seamlessly deployed to Kubernetes (K3s/AWS) without modifying application code.
+
+## Viva Questions — Phase 5
+
+**Q: What is a multi-stage Docker build and why did we use it for the React frontend?**
+A: A multi-stage Docker build uses multiple `FROM` statements in a single Dockerfile. We used Node.js in Stage 1 to compile React code into static HTML/CSS/JS bundles. In Stage 2, we copied ONLY the compiled static files into a clean `nginx:alpine` image, completely dropping Node.js and source files. This reduced final image size from ~800MB to ~25MB and significantly increased container security.
+
+**Q: What is the difference between Docker `CMD` and `ENTRYPOINT`?**
+A: `ENTRYPOINT` specifies the default command that ALWAYS runs when a container starts. `CMD` specifies default arguments passed to `ENTRYPOINT`, or default commands that can be overridden when executing `docker run container_name <override_cmd>`.
+
+**Q: How does `docker-compose` manage service startup order?**
+A: We used `depends_on` with `condition: service_healthy`. Docker Compose waits for the `postgres` healthcheck command (`pg_isready`) to return success before initializing the `backend` container, preventing database connection failure exceptions during startup.
+
+---
+
+# ═══════════════════════════════════════════════
 # [FUTURE PHASES WILL BE ADDED HERE]
 # ═══════════════════════════════════════════════
 
