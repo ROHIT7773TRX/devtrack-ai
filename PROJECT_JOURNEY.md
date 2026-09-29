@@ -226,6 +226,38 @@ A: AWS's automated systems scan GitHub continuously for exposed credentials. Wit
 ---
 
 # ═══════════════════════════════════════════════
+# PHASE 3 — REACT.JS FRONTEND DEVELOPMENT
+# Date: 2026-09-29
+# ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Initialized React.js frontend structure under `app/frontend/`
+2. Configured Axios API service client in `app/frontend/src/services/api.js`
+3. Built responsive UI components:
+   - `Navbar`: Header and navigation tabs
+   - `DashboardView`: Metrics overview, status cards, and recent activity
+   - `ApplicationList`: Data table with filtering by status and action buttons
+   - `ApplicationFormModal`: Interactive modal for creating and updating job applications
+4. Integrated state management and backend REST API connectivity
+
+## Why React.js?
+
+- Component-driven architecture allows reusing UI components cleanly
+- State-driven reactivity automatically updates the UI when job application data changes
+- Modern standard for building single-page dashboard applications (SPAs)
+
+## Viva Questions — Phase 3
+
+**Q: How does the React frontend communicate with the FastAPI backend?**
+A: The frontend uses `axios` to make HTTP REST API requests to the FastAPI endpoints (`GET /applications/`, `POST /applications/`, `GET /dashboard/`, etc.). Cross-Origin Resource Sharing (CORS) is enabled in FastAPI to permit requests from the React application origin.
+
+**Q: What is the purpose of `REACT_APP_API_URL` environment variable?**
+A: `REACT_APP_API_URL` allows the API endpoint URL to be configured dynamically. During local development it points to `http://localhost:8000`, while in Kubernetes/Docker environments it points to the containerized service or load balancer domain without altering source code.
+
+---
+
+# ═══════════════════════════════════════════════
 # [FUTURE PHASES WILL BE ADDED HERE]
 # ═══════════════════════════════════════════════
 
