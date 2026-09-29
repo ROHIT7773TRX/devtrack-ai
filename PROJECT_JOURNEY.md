@@ -258,6 +258,46 @@ A: `REACT_APP_API_URL` allows the API endpoint URL to be configured dynamically.
 ---
 
 # ═══════════════════════════════════════════════
+# PHASE 4 — AUTOMATED TESTING & TEST SUITE
+# Date: 2026-09-29
+# ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Configured unit testing using `pytest` and `httpx` (FastAPI `TestClient`)
+2. Implemented 10 unit tests in `tests/unit/test_applications.py` covering:
+   - Health check endpoint `/health` (liveness probe verification)
+   - Happy path application creation (`201 Created`)
+   - Schema validation failure for missing required fields (`422 Unprocessable Entity`)
+   - Empty application listing (`200 OK` with empty array)
+   - Data retrieval, filtering, single record lookup by ID (`200 OK`)
+   - Non-existent record lookup (`404 Not Found`)
+   - Partial updates via PATCH (`200 OK`)
+   - Deletion of records (`204 No Content`)
+   - Aggregated metrics calculation for dashboard endpoints
+3. Implemented end-to-end integration test in `tests/integration/test_api.py`:
+   - Validates the complete multi-step lifecycle: create -> verify metrics -> schedule interview -> update status -> delete -> verify cleanup
+4. Ran test suite with 100% pass rate (11/11 tests passing)
+
+## Demonstrated Controlled Test Failure & Debugging (Section 10 Requirement)
+
+To verify our CI/CD error-catching logic:
+- **Scenario:** Created a temporary test assertion expecting HTTP status code `200 OK` for a non-existent ID lookup instead of `404 Not Found`.
+- **Observed Result:** `pytest` caught the assertion failure, halting execution with exit code 1.
+- **Root Cause Identified:** The API correctly follows REST standards returning `404 Not Found` when a requested entity ID does not exist in PostgreSQL/SQLite.
+- **Resolution:** Updated assertion to expect HTTP `404`, returning test status to PASS.
+
+## Viva Questions — Phase 4
+
+**Q: What is the difference between Unit Testing and Integration Testing?**
+A: Unit testing isolates individual components (e.g. testing one specific route handler with a mocked or empty database session) to verify logic correctness in isolation. Integration testing tests multiple system layers together (e.g. testing the full HTTP request flow through FastAPI routing, Pydantic validation, SQLAlchemy ORM, database persistence, and cascading record updates across multiple endpoints).
+
+**Q: Why do we use SQLite in-memory for unit testing instead of the live PostgreSQL database?**
+A: In-memory SQLite provides instantaneous startup, zero external infrastructure dependencies, and absolute test isolation (a fresh database is created and destroyed per test function), preventing test pollution and allowing tests to execute rapidly in local development and CI/CD runners.
+
+---
+
+# ═══════════════════════════════════════════════
 # [FUTURE PHASES WILL BE ADDED HERE]
 # ═══════════════════════════════════════════════
 
