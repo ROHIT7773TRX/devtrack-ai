@@ -336,6 +336,45 @@ A: We used `depends_on` with `condition: service_healthy`. Docker Compose waits 
 ---
 
 # ═══════════════════════════════════════════════
+# PHASE 6 — TERRAFORM INFRASTRUCTURE AS CODE (AWS)
+# Date: 2026-09-29
+# ═══════════════════════════════════════════════
+
+## What We Did
+
+1. Defined AWS Provider configuration (`terraform/providers.tf`)
+2. Created input variables (`terraform/variables.tf`) for region, instance type (`t3.small`), SSH key name, and security CIDRs
+3. Authored infrastructure declaration (`terraform/main.tf`):
+   - Custom VPC (`10.0.0.0/16`) + Public Subnet (`10.0.1.0/24`)
+   - Internet Gateway & Public Route Table
+   - Security Group permitting SSH (22), HTTP (80), FastAPI (8000), and NodePort range (`30000-32767`)
+   - Ubuntu 22.04 LTS AMI dynamic lookup & EC2 Instance
+   - Elastic IP (Static Public IP)
+4. Defined Terraform output variables (`terraform/outputs.tf`) for SSH strings, IP endpoints, and K3s installation script commands
+5. Created `terraform.tfvars.example` template
+
+## Why Terraform instead of manual AWS Console creation?
+
+- **Reproducibility:** Infrastructure can be created, destroyed, or recreated in minutes using exact declarative code.
+- **Version Control:** Infrastructure changes are tracked in Git alongside application code.
+- **Cost Minimization & Cleanup:** Running `terraform destroy` tears down all AWS resources in one single automated step, ensuring AWS charges stop immediately after demo sessions.
+
+## Viva Questions — Phase 6
+
+**Q: What are the main steps in the Terraform workflow?**
+A:
+1. `terraform init`: Initializes working directory, downloads required AWS provider plugins.
+2. `terraform validate`: Checks syntax and validity of `.tf` files.
+3. `terraform plan`: Generates execution plan showing what resources will be created/modified/deleted.
+4. `terraform apply`: Provisions declared infrastructure on AWS.
+5. `terraform destroy`: Tears down and deletes all provisioned resources to prevent unwanted AWS billing.
+
+**Q: What is `terraform.tfstate` and why should it NOT be committed to Git?**
+A: `terraform.tfstate` maps declarative code to real deployed cloud resource IDs and attributes. It can contain sensitive data (passwords, private IPs, access tokens). Committing state files creates security risks and causes state file sync conflicts.
+
+---
+
+# ═══════════════════════════════════════════════
 # [FUTURE PHASES WILL BE ADDED HERE]
 # ═══════════════════════════════════════════════
 

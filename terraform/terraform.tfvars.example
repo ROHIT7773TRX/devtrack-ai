@@ -1,0 +1,10 @@
+# ============================================================
+# terraform/terraform.tfvars.example
+# Copy this file to terraform.tfvars and fill in your values.
+# NEVER commit terraform.tfvars to Git!
+# ============================================================
+
+aws_region       = "us-east-1"
+instance_type    = "t3.small"
+key_name         = "my-aws-ec2-key"
+allowed_ssh_cidr = "0.0.0.0/0"
