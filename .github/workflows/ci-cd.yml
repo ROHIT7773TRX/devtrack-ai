@@ -2,9 +2,9 @@ name: DevTrack AI CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   # ──────────────────────────────────────────────
@@ -21,8 +21,8 @@ jobs:
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install Backend Dependencies
         run: |
@@ -63,7 +63,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/devtrack-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME  }}/devtrack-backend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/devtrack-backend:${{ github.sha }}
 
       - name: Build & Push Frontend Docker Image
         uses: docker/build-push-action@v5
