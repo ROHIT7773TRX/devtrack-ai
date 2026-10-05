@@ -119,6 +119,25 @@ resource "aws_security_group" "devtrack_sg" {
 }
 
 # ──────────────────────────────────────────────
+# 2.5 AUTOMATED SSH KEY PAIR GENERATION
+# ──────────────────────────────────────────────
+
+resource "tls_private_key" "devtrack_key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+resource "aws_key_pair" "devtrack_key_pair" {
+  key_name   = var.key_name
+  public_key = tls_private_key.devtrack_key.public_key_openssh
+}
+
+resource "local_sensitive_file" "private_key" {
+  content  = tls_private_key.devtrack_key.private_key_pem
+  filename = "${path.module}/devtrack-ec2-key.pem"
+}
+
+# ──────────────────────────────────────────────
 # 3. AMI LOOKUP & EC2 INSTANCE PROVISIONING
 # ──────────────────────────────────────────────
 
@@ -142,7 +161,7 @@ resource "aws_instance" "devtrack_k3s_server" {
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.devtrack_public_subnet.id
   vpc_security_group_ids = [aws_security_group.devtrack_sg.id]
-  key_name               = var.key_name
+  key_name               = aws_key_pair.devtrack_key_pair.key_name
 
   root_block_device {
     volume_size           = 20 # GB

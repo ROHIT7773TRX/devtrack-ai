@@ -9,7 +9,7 @@ output "ec2_public_ip" {
 }
 
 output "ssh_connection_command" {
-  value       = "ssh -i ~/.ssh/${var.key_name}.pem ubuntu@${aws_eip.devtrack_eip.public_ip}"
+  value       = "ssh -i devtrack-ec2-key.pem ubuntu@${aws_eip.devtrack_eip.public_ip}"
   description = "Command to SSH directly into the EC2 instance"
 }
 
