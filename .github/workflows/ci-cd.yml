@@ -40,7 +40,7 @@ jobs:
     name: Build & Push Docker Images
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.DOCKER_USERNAME != '' }}
 
     steps:
       - name: Checkout Source Code
@@ -84,7 +84,7 @@ jobs:
     name: Deploy to K3s on AWS EC2
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' && secrets.AWS_EC2_PUBLIC_IP != '' }}
 
     steps:
       - name: Checkout Source Code
