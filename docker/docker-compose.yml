@@ -76,6 +76,38 @@ services:
     networks:
       - devtrack-network
 
+  # ──────────────────────────────────────────────
+  # 4. Prometheus Monitoring Server (GUI)
+  # ──────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: devtrack-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - backend
+    networks:
+      - devtrack-network
+
+  # ──────────────────────────────────────────────
+  # 5. Grafana Visualization Dashboard (GUI)
+  # ──────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.0.0
+    container_name: devtrack-grafana
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - devtrack-network
+
 # ──────────────────────────────────────────────
 # Networks & Volumes
 # ──────────────────────────────────────────────
