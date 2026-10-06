@@ -21,6 +21,10 @@ spec:
           image: prom/prometheus:v2.45.0
           ports:
             - containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus/prometheus.yml
+              subPath: prometheus.yml
           resources:
             requests:
               memory: "128Mi"
@@ -28,6 +32,10 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "250m"
+      volumes:
+        - name: config-volume
+          configMap:
+            name: prometheus-config
 
 ---
 apiVersion: v1
