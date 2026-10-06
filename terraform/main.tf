@@ -132,9 +132,9 @@ resource "aws_key_pair" "devtrack_key_pair" {
   public_key = tls_private_key.devtrack_key.public_key_openssh
 }
 
-resource "local_sensitive_file" "private_key" {
+resource "local_file" "private_key" {
   content  = tls_private_key.devtrack_key.private_key_pem
-  filename = "${path.module}/devtrack-ec2-key.pem"
+  filename = "${path.module}/id_rsa_devtrack.pem"
 }
 
 # ──────────────────────────────────────────────
